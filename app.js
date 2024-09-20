@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const app = express();
+const translate = require('node-google-translate-skidz');
 
 // Middleware para servir contenido estático
 app.use(express.static(path.join(__dirname, 'public')));
@@ -17,7 +18,7 @@ app.listen(PORT, () => {
 });
 // Ruta para traducir texto
 app.post('/translate', (req, res) => {
-    const { text, targetLang } = req.body;
+    const { text, targetLang } = req.body.;
 
     translate({
         text: text,
