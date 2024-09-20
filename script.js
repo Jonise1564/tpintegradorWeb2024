@@ -7,6 +7,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsPerPage = 20;
     const maxPages = 10; // Limitar a 10 páginas
 
+    
+      // Cargar opciones de departamentos
+      fetch('https://collectionapi.metmuseum.org/public/collection/v1/departments')
+      .then(response => response.json())
+      .then(data => {
+          const departmentSelect = document.getElementById('department');
+          data.departments.forEach(department => {
+              const option = document.createElement('option');
+              option.value = department.departmentId;
+              option.textContent = departmentTranslations[department.displayName] || department.displayName;
+              departmentSelect.appendChild(option);
+          });
+      })
+      .catch(error => {
+          console.error('Error fetching departments:', error);
+          const departmentSelect = document.getElementById('department');
+          departmentSelect.innerHTML = '<option>Error al cargar departamentos</option>';
+      });
+
     // Objeto de traducción departamentos
     const departmentTranslations = {
         "American Decorative Arts": "Artes Decorativas Americanas",
@@ -46,6 +65,24 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('currentPage', currentPage); // Guardar la página actual en localStorage
         await fetchResults();
     });
+        // Función para traducir texto usando el servidor de Node.js
+        async function translateText(text, targetLang) {
+            try {
+                const response = await fetch('/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text, targetLang: targetLang })
+                });
+                const result = await response.json();
+                return result.translatedText;
+            } catch (error) {
+                console.error('Error al traducir el texto:', error);
+                return text; // Devuelve el texto original si hay un error
+            }
+        }
+    
 
     async function fetchResults() {
         gallery.innerHTML = '';
@@ -88,15 +125,21 @@ document.addEventListener('DOMContentLoaded', () => {
                         const objectResponse = await fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
                         const objectData = await objectResponse.json();
 
+                        // Traducción de los campos
+                    const title = await translateText(data.title || 'Sin título', 'es');
+                    const culture = await translateText(data.culture || 'N/A', 'es');
+                    const dynasty = await translateText(data.dynasty || 'N/A', 'es');
+
+
                         if (objectData.primaryImageSmall && !processedTitles.has(objectData.title)) {
-                            processedTitles.add(objectData.title); // Agregar el título al conjunto de títulos procesados
+                            processedTitles.add(title); // Agregar el título al conjunto de títulos procesados
 
                             const card = document.createElement('div');
                             card.classList.add('card', 'col-md-3');
 
                             const img = document.createElement('img');
                             img.src = objectData.primaryImageSmall;
-                            img.alt = objectData.title;
+                            img.alt = title;
                             img.classList.add('card-img-top');
                             img.title = `Fecha de creación: ${objectData.objectDate || 'Desconocida'}`;
 
@@ -105,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                             const cardTitle = document.createElement('h5');
                             cardTitle.classList.add('card-title');
-                            cardTitle.textContent = objectData.title;
+                            cardTitle.textContent = title;
 
                             const cardText = document.createElement('p');
                             cardText.classList.add('card-text');
@@ -134,23 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         console.error(`Error fetching object data for ID ${id}:`, error);
                     }
                 }
-                // Función para traducir texto usando el servidor de Node.js
-    async function translateText(text, targetLang) {
-        try {
-            const response = await fetch('/translate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ text: text, targetLang: targetLang })
-            });
-            const result = await response.json();
-            return result.translatedText;
-        } catch (error) {
-            console.error('Error al traducir el texto:', error);
-            return text; // Devuelve el texto original si hay un error
-        }
-    }
 
                 // Crear botones de paginacion solo si hay más de 20 resultados
                 if (totalResults > resultsPerPage) {
@@ -184,23 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (savedDepartment || savedKeyword || savedLocation) {
         fetchResults();
     }
-        // Cargar opciones de departamentos
-    fetch('https://collectionapi.metmuseum.org/public/collection/v1/departments')
-    .then(response => response.json())
-    .then(data => {
-        const departmentSelect = document.getElementById('department');
-        data.departments.forEach(department => {
-            const option = document.createElement('option');
-            option.value = department.departmentId;
-            option.textContent = departmentTranslations[department.displayName] || department.displayName;
-            departmentSelect.appendChild(option);
-        });
-    })
-    .catch(error => {
-        console.error('Error fetching departments:', error);
-        const departmentSelect = document.getElementById('department');
-        departmentSelect.innerHTML = '<option>Error al cargar departamentos</option>';
-    });
+      
 
 
 });
