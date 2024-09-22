@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imágenes Adicionales</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .back-arrow {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .back-arrow i {
+            margin-right: 5px;
+        }
+        body{
+            background-image: url('images/fondoMuseo.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: #fff; /* Cambiar el color del texto para mejor visibilidad */
+        }
+        .card-img-top {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+    .img-thumbnail.col-md-3:hover {
+        transform: scale(1.07);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .img-thumbnail.col-md-3{
+        background-color: rgba(0, 0, 0, 0.0); /* Negro con 50% de opacidad */
+    }
+
+    .img-thumbnail{
+        border: none;
+    }
+ 
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-arrow">
+            <a href="index.html" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver
+            </a>
+        </div>
+        <h1 class="my-4">Imágenes Adicionales</h1>
+        <div id="additionalGallery" class="row">
+            <!-- Imágenes adicionales -->
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const objectID = urlParams.get('objectID');
+            const gallery = document.getElementById('additionalGallery');
+
+            const response = await fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${objectID}`);
+            const objectData = await response.json();
+
+            if (objectData.additionalImages && objectData.additionalImages.length > 0) {
+                objectData.additionalImages.forEach(imageUrl => {
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.alt = objectData.title;
+                    img.classList.add('img-thumbnail', 'col-md-3');
+                    gallery.appendChild(img);
+                });
+            } else {
+                gallery.innerHTML = '<p>No se encontraron imágenes adicionales.</p>';
+            }
+        });
+    </script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</body>
+</html>
