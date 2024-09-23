@@ -1,3 +1,5 @@
+
+//test
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('filterForm');
     const gallery = document.getElementById('gallery');
