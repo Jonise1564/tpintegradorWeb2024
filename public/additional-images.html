@@ -44,10 +44,15 @@
 <body>
     <div class="container">
         <div class="back-arrow">
-            <a href="index.html" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Volver
-            </a>
-        </div>
+              <!-- Botón para volver y llamar a fetchResults()
+               <button id="volver" class="btn btn-secondary">Volver</button>            -->
+            
+             <!-- <a href="index.html" class="btn btn-secondary"> -->
+                <!-- <i class="fas fa-arrow-left"></i> Volver -->
+            </a> 
+        </div> 
+      
+
         <h1 class="my-4">Imágenes Adicionales</h1>
         <div id="additionalGallery" class="row">
             <!-- Imágenes adicionales -->
@@ -74,7 +79,16 @@
                 gallery.innerHTML = '<p>No se encontraron imágenes adicionales.</p>';
             }
         });
+
+        // document.getElementById('volver').addEventListener('click', () => {
+        //     if (window.opener && !window.opener.closed) {
+        //         window.opener.fetchResults();
+        //         window.close(); // Cierra la ventana actual
+        //     } else {
+        //         alert('La ventana principal no está disponible.');
+        //     }
+        // });
     </script>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <!-- <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script> -->
 </body>
 </html>
