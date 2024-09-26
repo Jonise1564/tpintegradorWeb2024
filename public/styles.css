@@ -225,3 +225,8 @@ body {
 .img-thumbnail .col-md-3{
     background-color: rgba(0, 0, 0, 0.5); /* Negro con 50% de opacidad */
 }
+
+.resaltado {
+    border: 2px solid #ff0000; /* Cambia el color y grosor del borde */
+    background-color: #ffff99; /* Cambia el color de fondo */
+}
