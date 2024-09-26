@@ -1,5 +1,3 @@
-
-//test
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('filterForm');
     const gallery = document.getElementById('gallery');
@@ -9,24 +7,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsPerPage = 20;
     const maxPages = 10; // Limitar a 10 páginas
 
-    
-      // Cargar opciones de departamentos
-      fetch('https://collectionapi.metmuseum.org/public/collection/v1/departments')
-      .then(response => response.json())
-      .then(data => {
-          const departmentSelect = document.getElementById('department');
-          data.departments.forEach(department => {
-              const option = document.createElement('option');
-              option.value = department.departmentId;
-              option.textContent = departmentTranslations[department.displayName] || department.displayName;
-              departmentSelect.appendChild(option);
-          });
-      })
-      .catch(error => {
-          console.error('Error fetching departments:', error);
-          const departmentSelect = document.getElementById('department');
-          departmentSelect.innerHTML = '<option>Error al cargar departamentos</option>';
-      });
+    // Resetear el formulario al recargar la página
+   // form.reset();
+
+    // Cargar opciones de departamentos
+    fetch('https://collectionapi.metmuseum.org/public/collection/v1/departments')
+        .then(response => response.json())
+        .then(data => {
+            const departmentSelect = document.getElementById('department');
+            data.departments.forEach(department => {
+                const option = document.createElement('option');
+                option.value = department.departmentId;
+                option.textContent = departmentTranslations[department.displayName] || department.displayName;
+                departmentSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching departments:', error);
+            const departmentSelect = document.getElementById('department');
+            departmentSelect.innerHTML = '<option>Error al cargar departamentos</option>';
+        });
 
     // Objeto de traducción departamentos
     const departmentTranslations = {
@@ -63,28 +63,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
+
+        // Validar que los campos no estén vacíos
+        const department = document.getElementById('department').value;
+        const keyword = document.getElementById('keyword').value;
+        const location = document.getElementById('location').value;
+
+        if (!department && !keyword && !location) {
+            alert('Por favor, complete algún parámetro de la búsqueda.');
+            const campo = document.getElementById('keyword');
+            campo.focus();
+            return;
+        }
+
         currentPage = 1; // Restablecer a la primera página en una nueva búsqueda
         localStorage.setItem('currentPage', currentPage); // Guardar la página actual en localStorage
         await fetchResults();
     });
-        // Función para traducir texto usando el servidor de Node.js
-        async function translateText(text, targetLang) {
-            try {
-                const response = await fetch('/translate', {
-                    method: 'get',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ text: text, targetLang: targetLang })
-                });
-                const result = await response.json();
-                return result.translatedText;
-            } catch (error) {
-                console.error('Error al traducir el texto:', error);
-                return text; // Devuelve el texto original si hay un error
-            }
-        }
-    
 
     async function fetchResults() {
         gallery.innerHTML = '';
@@ -101,16 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('keyword', keyword);
         localStorage.setItem('location', location);
 
-        console.log('Department:', department);
-        console.log('Keyword:', keyword);
-        console.log('Location:', location);
-
         let url = 'https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true';
+        url += keyword ? `&q=${keyword}` : '&q=""';
         if (department) url += `&departmentId=${department}`;
-        if (keyword) url += `&q=${keyword}`;
         if (location) url += `&geoLocation=${location}`;
-
-        console.log('API URL:', url);
 
         try {
             const response = await fetch(url);
@@ -118,23 +107,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.objectIDs) {
                 const totalResults = data.objectIDs.length;
-                const totalPages = Math.min(Math.ceil(totalResults / resultsPerPage), maxPages); // Limitar a 10 páginas
+                const totalPages = Math.min(Math.ceil(totalResults / resultsPerPage), maxPages);
                 const start = (currentPage - 1) * resultsPerPage;
                 const end = start + resultsPerPage;
                 const objectIDs = data.objectIDs.slice(start, end);
+
                 for (const id of objectIDs) {
                     try {
                         const objectResponse = await fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
                         const objectData = await objectResponse.json();
 
-                        // Traducción de los campos
-                    const title = await translateText(data.title || 'Sin título', 'es');
-                    const culture = await translateText(data.culture || 'N/A', 'es');
-                    const dynasty = await translateText(data.dynasty || 'N/A', 'es');
-
-
                         if (objectData.primaryImageSmall && !processedTitles.has(objectData.title)) {
-                            processedTitles.add(title); // Agregar el título al conjunto de títulos procesados
+                            const title = objectData.title;
+                            const culture = objectData.culture || 'N/A';
+                            const dynasty = objectData.dynasty || 'N/A';
+
+                            processedTitles.add(title);
 
                             const card = document.createElement('div');
                             card.classList.add('card', 'col-md-3');
@@ -155,8 +143,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             const cardText = document.createElement('p');
                             cardText.classList.add('card-text');
                             cardText.innerHTML = `
-                                <strong>Cultura:</strong> ${objectData.culture || 'N/A'}<br>
-                                <strong>Dinastía:</strong> ${objectData.dynasty || 'N/A'}
+                                <strong>Cultura:</strong> ${culture}<br>
+                                <strong>Dinastía:</strong> ${dynasty}
                             `;
 
                             cardBody.appendChild(cardTitle);
@@ -167,7 +155,12 @@ document.addEventListener('DOMContentLoaded', () => {
                                 viewMoreButton.classList.add('btn', 'btn-secondary');
                                 viewMoreButton.textContent = 'Ver Imágenes Adicionales';
                                 viewMoreButton.onclick = () => {
-                                    window.location.href = `additional-images.html?objectID=${objectData.objectID}`;
+                                    window.open(`additional-images.html?objectID=${objectData.objectID}`, '_blank');
+                                    //  window.location.href = `additional-images.html?objectID=${objectData.objectID}`;
+                                    // if (savedDepartment || savedKeyword || savedLocation) {
+                                    //     fetchResults();
+                                    //  }
+
                                 };
                                 cardBody.appendChild(viewMoreButton);
                             }
@@ -180,7 +173,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // Crear botones de paginacion solo si hay más de 20 resultados
                 if (totalResults > resultsPerPage) {
                     for (let i = 1; i <= totalPages; i++) {
                         const button = document.createElement('button');
@@ -191,7 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                         button.addEventListener('click', async () => {
                             currentPage = i;
-                            localStorage.setItem('currentPage', currentPage); // Guardar la página actual en localStorage
+                            localStorage.setItem('currentPage', currentPage);
                             await fetchResults();
                         });
                         pagination.appendChild(button);
@@ -204,15 +196,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching search results:', error);
             gallery.innerHTML = '<p>Hubo un error al recuperar los resultados. Por favor, inténtelo de nuevo más tarde.</p>';
         } finally {
-            loader.style.display = 'none'; // Ocultar indicador de carga
+            loader.style.display = 'none';
         }
     }
 
     // Fetch initial results if there are saved parameters
     if (savedDepartment || savedKeyword || savedLocation) {
-        fetchResults();
+       //fetchResults();
     }
-      
-
-
 });
