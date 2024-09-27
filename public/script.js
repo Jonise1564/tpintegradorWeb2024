@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const maxPages = 10; // Limitar a 10 páginas
 
     // Resetear el formulario al recargar la página
-   form.reset();
+   // form.reset();
 
     // Cargar opciones de departamentos
     fetch('https://collectionapi.metmuseum.org/public/collection/v1/departments')
@@ -81,6 +81,25 @@ document.addEventListener('DOMContentLoaded', () => {
         await fetchResults();
     });
 
+
+// Función para traducir texto usando el servidor de Node.js
+async function translateText(text, targetLang) {
+    try {
+        const response = await fetch('/translate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ text: text, targetLang: targetLang })
+        });
+        const result = await response.json();
+        return result.translatedText;
+    } catch (error) {
+        console.error('Error al traducir el texto:', error);
+        return text; // Devuelve el texto original si hay un error
+    }
+}
+
     async function fetchResults() {
         gallery.innerHTML = '';
         pagination.innerHTML = ''; // Limpiar paginación antes de agregar nuevos botones
@@ -118,9 +137,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         const objectData = await objectResponse.json();
 
                         if (objectData.primaryImageSmall && !processedTitles.has(objectData.title)) {
-                            const title = objectData.title;
-                            const culture = objectData.culture || 'N/A';
-                            const dynasty = objectData.dynasty || 'N/A';
+                        
+                        const title = await translateText(objectData.title || 'Sin título', 'es');
+                        const culture = await translateText(objectData.culture || 'N/A', 'es');
+                        const dynasty = await translateText(objectData.dynasty || 'N/A', 'es');
 
                             processedTitles.add(title);
 
@@ -156,10 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
                                 viewMoreButton.textContent = 'Ver Imágenes Adicionales';
                                 viewMoreButton.onclick = () => {
                                     window.open(`additional-images.html?objectID=${objectData.objectID}`, '_blank');
-                                    //  window.location.href = `additional-images.html?objectID=${objectData.objectID}`;
-                                    // if (savedDepartment || savedKeyword || savedLocation) {
-                                    //     fetchResults();
-                                    //  }
 
                                 };
                                 cardBody.appendChild(viewMoreButton);
