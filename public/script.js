@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const maxPages = 10; // Limitar a 10 páginas
 
     // Resetear el formulario al recargar la página
-   // form.reset();
+   form.reset();
 
     // Cargar opciones de departamentos
     fetch('https://collectionapi.metmuseum.org/public/collection/v1/departments')
