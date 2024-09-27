@@ -7,9 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsPerPage = 20;
     const maxPages = 10; // Limitar a 10 páginas
 
-    // Resetear el formulario al recargar la página
-   form.reset();
-
+   
     // Cargar opciones de departamentos
     fetch('https://collectionapi.metmuseum.org/public/collection/v1/departments')
         .then(response => response.json())
@@ -220,4 +218,7 @@ async function translateText(text, targetLang) {
     if (savedDepartment || savedKeyword || savedLocation) {
        //fetchResults();
     }
+     // Resetear el formulario al recargar la página
+   form.reset();
+
 });
